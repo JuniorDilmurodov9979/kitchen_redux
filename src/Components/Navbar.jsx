@@ -1,10 +1,16 @@
-import React, { useState } from "react";
+import { Button } from "antd";
+import React, { use, useState } from "react";
 import { useSelector } from "react-redux";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const id = useSelector((state) => state.getId.id);
-  console.log(id);
+  // console.log(id);
+  const navigate = useNavigate();
+  function LogOut() {
+    localStorage.removeItem("isRole");
+    navigate("/login");
+  }
 
   return (
     <header className=" bg-white/10 backdrop-blur-lg shadow-lg py-5 flex items-center gap-6 justify-center  border border-white/20">
@@ -32,6 +38,15 @@ const Navbar = () => {
       >
         💺 Stullar
       </NavLink>
+      <Button
+        onClick={LogOut}
+        className="ml-20"
+        variant="solid"
+        size="large"
+        color="danger"
+      >
+        Log out
+      </Button>
     </header>
   );
 };

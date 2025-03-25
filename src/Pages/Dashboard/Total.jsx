@@ -7,13 +7,18 @@ import { useParams } from "react-router-dom";
 
 const Total = () => {
   const dispatch = useDispatch();
-  const printRef = useRef(null);
+  const printRefs = useRef({});
   const { id } = useParams();
 
+  // its for only exact client
   const client = useSelector((state) =>
     state.order.clients.find((client) => client.clientId === id)
   );
   console.log(client);
+
+  // its for all clients
+  const ordersClient = useSelector((state) => state.order.clients);
+  console.log(ordersClient);
 
   if (!client || client.orders.length === 0)
     return (
@@ -29,20 +34,31 @@ const Total = () => {
     0
   );
 
-  const handlePrint = () => {
-    if (printRef.current) {
-      const printContent = printRef.current.innerHTML;
-      const originalContent = document.body.innerHTML;
-
-      document.body.innerHTML = printContent;
-      window.print();
-      document.body.innerHTML = originalContent;
-      window.location.reload();
+  const handlePrint = (clientId) => {
+    const printContent = printRefs.current[clientId]?.innerHTML;
+    if (printContent) {
+      const printWindow = window.open("", "_blank");
+      printWindow.document.write(`
+        <html>
+          <head>
+            <title>Print</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 20px; }
+              h1 { text-align: center; }
+              table { width: 100%; border-collapse: collapse; }
+              th, td { border: 1px solid black; padding: 8px; text-align: left; }
+            </style>
+          </head>
+          <body>${printContent}</body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.print();
     }
   };
 
-  const handleRemoveClient = () => {
-    dispatch(removeClientOrders({ id }));
+  const handleRemoveClient = (clientId) => {
+    dispatch(removeClientOrders({ id: clientId }));
   };
 
   const columns = [
@@ -63,51 +79,60 @@ const Total = () => {
   ];
 
   return (
-    <div className="p-6 flex flex-col items-center min-h-screen bg-gray-100">
-      <Card className="w-full max-w-4xl shadow-xl rounded-2xl bg-white p-6">
-        <div ref={printRef}>
-          <h1 className="text-3xl font-bold text-gray-800 text-center mb-4">
-            Order Summary for Client {id}
-          </h1>
+    <div className="p-6 flex flex-col gap-7 items-center min-h-screen bg-gray-100">
+      {ordersClient.length > 0 &&
+        ordersClient.map((client) => {
+          if (!client.orders || client.orders.length === 0) return null;
+          return (
+            <Card
+              key={client.clientId}
+              className="w-full max-w-4xl shadow-xl rounded-2xl bg-white p-6"
+            >
+              <div ref={(el) => (printRefs.current[client.clientId] = el)}>
+                <h1 className="text-3xl font-bold text-gray-800 text-center mb-4">
+                  {client.clientId} - Mijoz buyurtmasi
+                </h1>
 
-          <Table
-            dataSource={orders}
-            columns={columns}
-            pagination={false}
-            rowKey="name"
-            className="shadow-md rounded-xl"
-          />
+                <Table
+                  dataSource={client.orders}
+                  columns={columns}
+                  pagination={false}
+                  rowKey="name"
+                  className="shadow-md rounded-xl"
+                />
 
-          <div className="mt-6 text-xl font-semibold text-gray-900 flex justify-between border-t pt-4">
-            <span>Umumiy narxi:</span>
-            <span className="text-green-600">{totalPrice} Sum </span>
-          </div>
-        </div>
+                <div className="mt-6 text-xl font-semibold text-gray-900 flex justify-between border-t pt-4">
+                  <span>Umumiy narxi:</span>
+                  <span className="text-green-600">{totalPrice} Sum </span>
+                </div>
+              </div>
 
-        <div className="flex justify-center mt-6">
-          {orders.length > 0 && (
-            <div className="flex gap-6">
-              <Button
-                type="primary"
-                icon={<PrinterOutlined />}
-                onClick={handlePrint}
-                className="px-6 py-2 text-lg rounded-lg shadow-md"
-              >
-                Print Order
-              </Button>
-              <Button
-                type="primary"
-                danger
-                icon={<DeleteOutlined />}
-                onClick={handleRemoveClient}
-                className="px-6 py-2 text-lg rounded-lg shadow-md"
-              >
-                Yakunlash
-              </Button>
-            </div>
-          )}
-        </div>
-      </Card>
+              <div className="flex justify-center mt-6">
+                {orders.length > 0 && (
+                  <div className="flex gap-6">
+                    <Button
+                      type="primary"
+                      icon={<PrinterOutlined />}
+                      onClick={() => handlePrint(client.clientId)}
+                      className="px-6 py-2 text-lg rounded-lg shadow-md"
+                    >
+                      Print Order
+                    </Button>
+                    <Button
+                      type="primary"
+                      danger
+                      icon={<DeleteOutlined />}
+                      onClick={() => handleRemoveClient(client.clientId)}
+                      className="px-6 py-2 text-lg rounded-lg shadow-md"
+                    >
+                      Yakunlash
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </Card>
+          );
+        })}
     </div>
   );
 };
