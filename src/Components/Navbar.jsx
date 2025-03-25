@@ -1,7 +1,7 @@
 import { Button } from "antd";
 import React, { use, useState } from "react";
 import { useSelector } from "react-redux";
-import { NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const id = useSelector((state) => state.getId.id);
@@ -47,6 +47,12 @@ const Navbar = () => {
       >
         Log out
       </Button>
+      <Link
+        className="border rounded-lg bg-blue-500 text-white hover:bg-blue-600 p-2"
+        to={"/login"}
+      >
+        Login
+      </Link>
     </header>
   );
 };
